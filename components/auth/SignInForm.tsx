@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { handleError } from '../../services/errorHandler';
 
 interface SignInFormProps {
   onSwitchToSignUp: () => void;
@@ -30,28 +31,21 @@ const InputField: React.FC<InputFieldProps> = ({ label, type, value, onChange, r
 const SignInForm: React.FC<SignInFormProps> = ({ onSwitchToSignUp }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     
     try {
-      await login(email, password);
+      await login({ usernameOrEmail: email, password });
     } catch (error) {
-      setError('Invalid email or password. Please try again.');
+      handleError(error, 'Login');
     }
   };
 
   return (
     <div className="w-full max-w-sm mx-auto">
       <h2 className="text-3xl font-bold text-pink-500 mb-8 text-center">Sign in</h2>
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
       <form onSubmit={handleSubmit}>
         <InputField 
           label="Email" 

@@ -326,6 +326,18 @@ export const BellIcon: React.FC<IconProps> = (props) => (
   <FontIcon name="bell-1" {...props} />
 );
 
+export const AlertIcon: React.FC<IconProps> = (props) => (
+  <FontIcon name="alarm-1" {...props} />
+);
+
+export const InfoCircleIcon: React.FC<IconProps> = (props) => (
+  <FontIcon name="information-circle" {...props} />
+);
+
+export const FileXmarkIcon: React.FC<IconProps> = (props) => (
+  <FontIcon name="file-xmark" {...props} />
+);
+
 // Status Icons
 export const OnlineIcon: React.FC<IconProps> = (props) => (
   <FontIcon name="check-circle-1" {...props} />

@@ -32,7 +32,11 @@ const ChatView: React.FC<ChatViewProps> = ({ chat, onSendMessage, currentUser, u
 
   // Load attachments for messages
   useEffect(() => {
+    let isCancelled = false;
+
     const loadAttachments = async () => {
+      if (!chat.messages || chat.messages.length === 0) return;
+
       const messageIds = (chat.messages || []).map(msg => msg.id);
       const attachmentPromises = messageIds.map(async (messageId) => {
         try {
@@ -44,17 +48,27 @@ const ChatView: React.FC<ChatViewProps> = ({ chat, onSendMessage, currentUser, u
         }
       });
 
-      const results = await Promise.all(attachmentPromises);
-      const attachmentMap: {[messageId: string]: any[]} = {};
-      results.forEach(({ messageId, attachments: msgAttachments }) => {
-        attachmentMap[messageId] = msgAttachments;
-      });
-      setAttachments(attachmentMap);
+      try {
+        const results = await Promise.all(attachmentPromises);
+        if (!isCancelled) {
+          const attachmentMap: {[messageId: string]: any[]} = {};
+          results.forEach(({ messageId, attachments: msgAttachments }) => {
+            attachmentMap[messageId] = msgAttachments;
+          });
+          setAttachments(attachmentMap);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Failed to load attachments:', error);
+        }
+      }
     };
 
-    if (chat.messages && chat.messages.length > 0) {
-      loadAttachments();
-    }
+    loadAttachments();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [chat.messages]);
 
   const handleSend = (e: React.FormEvent) => {
@@ -155,11 +169,11 @@ const ChatView: React.FC<ChatViewProps> = ({ chat, onSendMessage, currentUser, u
   };
   
   const getUserAvatar = (user: User) => {
-    return user.avatar || user.avatar_url;
+    return user.avatarUrl;
   };
   
   const getUserName = (user: User) => {
-    return user.name || user.full_name || user.username || user.user_name || 'User';
+    return user.fullName || user.username || 'User';
   };
   
   const renderMessageContent = (message: Message) => {
@@ -226,7 +240,7 @@ const ChatView: React.FC<ChatViewProps> = ({ chat, onSendMessage, currentUser, u
                   {showAvatar && sender && (
                     <div className={`flex items-baseline gap-2 mb-1 ${isCurrentUser ? 'flex-row-reverse' : ''}`}>
                       <span className="font-bold">{getUserName(sender)}</span>
-                      <span className="text-xs text-gray-500">{msg.timestamp}</span>
+                      <span className="text-xs text-gray-500">{new Date(msg.timestamp).toLocaleString()}</span>
                     </div>
                   )}
                   

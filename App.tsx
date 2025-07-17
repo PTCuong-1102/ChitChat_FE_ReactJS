@@ -3,6 +3,7 @@ import React from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { FriendsProvider } from './contexts/FriendsContext';
+import { NotificationProvider } from './components/notifications/NotificationProvider';
 import AuthPage from './components/auth/AuthPage';
 import ChatInterface from './components/chat/ChatInterface';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -36,17 +37,13 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ErrorBoundary>
+        <NotificationProvider>
           <FriendsProvider>
-            <ErrorBoundary>
-              <ChatProvider>
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
-              </ChatProvider>
-            </ErrorBoundary>
+            <ChatProvider>
+              <AppContent />
+            </ChatProvider>
           </FriendsProvider>
-        </ErrorBoundary>
+        </NotificationProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
