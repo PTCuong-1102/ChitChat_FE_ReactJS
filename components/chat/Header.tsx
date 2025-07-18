@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Chat } from '../../types';
-import { UsersIcon, BellIcon, SearchIcon, AtSymbolIcon } from '../icons/Icons';
+import { UsersIcon, BellIcon, SearchIcon, GlobalSearchIcon, AtSymbolIcon } from '../icons/Icons';
 import { useFriends } from '../../contexts/FriendsContext';
 
 interface HeaderProps {
@@ -11,9 +11,10 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onToggleManagementPanel: () => void;
+  onShowGlobalSearch?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeChat, view, onShowFriendRequests, searchQuery, onSearchChange, onToggleManagementPanel }) => {
+const Header: React.FC<HeaderProps> = ({ activeChat, view, onShowFriendRequests, searchQuery, onSearchChange, onToggleManagementPanel, onShowGlobalSearch }) => {
   const { friendRequestCount } = useFriends();
   
   let title = 'Friends';
@@ -31,6 +32,15 @@ const Header: React.FC<HeaderProps> = ({ activeChat, view, onShowFriendRequests,
         {activeChat && (
           <button onClick={onToggleManagementPanel} className="text-gray-500 hover:text-pink-500">
               <UsersIcon />
+          </button>
+        )}
+        {onShowGlobalSearch && (
+          <button 
+            onClick={onShowGlobalSearch} 
+            className="text-gray-500 hover:text-pink-500 transition-colors"
+            title="Search all messages"
+          >
+            <GlobalSearchIcon className="w-5 h-5" />
           </button>
         )}
         <button onClick={onShowFriendRequests} className="relative text-gray-500 hover:text-pink-500">

@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { CheckIcon, XIcon } from '../icons/Icons';
+import { CheckIcon, CloseIcon, UserAvatarWithInitials } from '../icons/Icons';
 import { useFriends } from '../../contexts/FriendsContext';
 
 interface FriendRequest {
-  id: number;
+  id: string;
   senderId: string;
   receiverId: string;
   status: string;
@@ -24,16 +24,19 @@ interface FriendRequestsModalProps {
 
 const FriendRequestItem: React.FC<{ 
   request: FriendRequest;
-  onAccept: (requestId: number) => void;
-  onReject: (requestId: number) => void;
+  onAccept: (requestId: string) => void;
+  onReject: (requestId: string) => void;
   isLoading: boolean;
 }> = ({ request, onAccept, onReject, isLoading }) => {
-  const avatar = request.sender.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(request.sender.full_name || request.sender.user_name)}&background=pink&color=fff`;
-  
   return (
     <div className="flex items-center justify-between p-3">
       <div className="flex items-center">
-        <img src={avatar} alt={request.sender.full_name} className="w-10 h-10 rounded-full" />
+        <UserAvatarWithInitials 
+          fullName={request.sender.full_name || request.sender.user_name}
+          avatarUrl={request.sender.avatar_url || undefined}
+          size={40}
+          className="rounded-full"
+        />
         <div className="ml-3">
           <p className="font-semibold">{request.sender.full_name || request.sender.user_name}</p>
           <p className="text-sm text-gray-500">@{request.sender.user_name}</p>
@@ -53,7 +56,7 @@ const FriendRequestItem: React.FC<{
           disabled={isLoading}
           className="p-2 rounded-full text-red-500 bg-red-100 hover:bg-red-200 disabled:opacity-50"
         >
-          <XIcon />
+          <CloseIcon />
         </button>
       </div>
     </div>
@@ -64,7 +67,7 @@ const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ onClose }) =>
   const [actionLoading, setActionLoading] = useState(false);
   const { friendRequests, isLoading, acceptFriendRequest, rejectFriendRequest } = useFriends();
 
-  const handleAccept = async (requestId: number) => {
+  const handleAccept = async (requestId: string) => {
     try {
       setActionLoading(true);
       await acceptFriendRequest(requestId);
@@ -75,7 +78,7 @@ const FriendRequestsModal: React.FC<FriendRequestsModalProps> = ({ onClose }) =>
     }
   };
 
-  const handleReject = async (requestId: number) => {
+  const handleReject = async (requestId: string) => {
     try {
       setActionLoading(true);
       await rejectFriendRequest(requestId);

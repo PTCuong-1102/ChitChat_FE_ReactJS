@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../../types';
-import { CogIcon, MicrophoneIcon, LogoutIcon } from '../icons/Icons';
+import { CogIcon, MicrophoneIcon, LogoutIcon, UserAvatarWithInitials } from '../icons/Icons';
 
 interface UserInfoProps {
   user: User;
@@ -12,7 +12,12 @@ const UserInfo: React.FC<UserInfoProps> = ({ user, onSignOut, onOpenProfile }) =
   return (
     <div className="flex-shrink-0 flex items-center justify-between h-20 bg-pink-200 px-4">
       <div className="flex items-center cursor-pointer" onClick={onOpenProfile}>
-        <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
+        <UserAvatarWithInitials
+          fullName={user.name || user.full_name || 'User'}
+          avatarUrl={user.avatar || user.avatar_url}
+          size={40}
+          className="rounded-full"
+        />
         <div className="ml-3">
           <p className="font-semibold text-gray-800">{user.name}</p>
           <p className="text-sm text-gray-600">#{user.username}</p>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Chat, User } from '../../types';
-import { PlusIcon } from '../icons/Icons';
+import { PlusIcon, getBotAvatar, UserAvatarWithInitials } from '../icons/Icons';
 import UserInfo from './UserInfo';
 
 interface SidebarProps {
@@ -58,24 +58,38 @@ interface ChatItemProps {
 }
 
 const ChatItem: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, currentUser }) => {
-  let avatarUrl: string | undefined;
+  let avatarComponent: React.ReactNode;
   let displayName: string;
   let details: string | undefined;
 
   if (chat.isBotChat) {
-    const bot = chat.participants.find(p => p.isBot);
-    avatarUrl = bot?.avatar;
+    const bot = chat.participants?.find(p => p.isBot);
+    avatarComponent = getBotAvatar(bot?.provider, 40, 'rounded-full mr-3');
     displayName = bot?.name ?? chat.name;
     details = chat.lastMessagePreview;
   } else if (chat.type === 'dm') {
-    const otherUser = chat.participants.find(p => p.id !== currentUser.id);
-    avatarUrl = otherUser?.avatar;
+    const otherUser = chat.participants?.find(p => p.id !== currentUser.id);
+    avatarComponent = (
+      <UserAvatarWithInitials
+        fullName={otherUser?.name || otherUser?.full_name || 'User'}
+        avatarUrl={otherUser?.avatar || otherUser?.avatar_url}
+        size={40}
+        className="rounded-full mr-3"
+      />
+    );
     displayName = otherUser?.name ?? chat.name;
     details = chat.lastMessagePreview ?? otherUser?.activity ?? '';
   } else { // group chat
-    avatarUrl = chat.avatar;
+    avatarComponent = (
+      <UserAvatarWithInitials
+        fullName={chat.name || 'Group'}
+        avatarUrl={chat.avatar}
+        size={40}
+        className="rounded-full mr-3"
+      />
+    );
     displayName = chat.name;
-    details = chat.lastMessagePreview ?? `${chat.participants.length} members`;
+    details = chat.lastMessagePreview ?? `${chat.participants?.length || 0} members`;
   }
 
   return (
@@ -85,11 +99,7 @@ const ChatItem: React.FC<ChatItemProps> = ({ chat, isActive, onSelect, currentUs
         isActive ? 'bg-pink-300 text-white' : 'hover:bg-pink-200'
       }`}
     >
-      <img
-        src={avatarUrl ?? 'https://i.imgur.com/8c1zJ1s.png'} // Fallback avatar
-        alt={displayName}
-        className="w-10 h-10 rounded-full mr-3 object-cover"
-      />
+      {avatarComponent}
       <div className="flex-grow overflow-hidden">
         <p className="font-semibold truncate">{displayName}</p>
         <p className={`text-sm truncate ${isActive ? 'text-gray-100' : 'text-gray-500'}`}>

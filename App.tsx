@@ -5,6 +5,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import { FriendsProvider } from './contexts/FriendsContext';
 import AuthPage from './components/auth/AuthPage';
 import ChatInterface from './components/chat/ChatInterface';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,13 +34,21 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <FriendsProvider>
-        <ChatProvider>
-          <AppContent />
-        </ChatProvider>
-      </FriendsProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ErrorBoundary>
+          <FriendsProvider>
+            <ErrorBoundary>
+              <ChatProvider>
+                <ErrorBoundary>
+                  <AppContent />
+                </ErrorBoundary>
+              </ChatProvider>
+            </ErrorBoundary>
+          </FriendsProvider>
+        </ErrorBoundary>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

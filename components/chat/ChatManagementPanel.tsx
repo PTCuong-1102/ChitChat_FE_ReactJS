@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Chat, User } from '../../types';
-import { XIcon, UserGroupIcon, PhotoIcon, DocumentIcon, LinkIcon, DotsHorizontalIcon } from '../icons/Icons';
+import { CloseIcon, UserGroupIcon, PhotoIcon, DocumentIcon, LinkIcon, DotsHorizontalIcon, UserAvatarWithInitials } from '../icons/Icons';
 
 interface ChatManagementPanelProps {
   chat: Chat;
@@ -21,7 +21,7 @@ const ChatManagementPanel: React.FC<ChatManagementPanelProps> = ({ chat, current
     const adminIds = Object.keys(chat.roles || {}).filter(id => chat.roles?.[id] === 'admin');
     const memberIds = Object.keys(chat.roles || {}).filter(id => chat.roles?.[id] === 'member');
     
-    const findUser = (id: string) => chat.participants.find(p => p.id === id);
+    const findUser = (id: string) => chat.participants?.find(p => p.id === id);
 
     return {
       admins: adminIds.map(findUser).filter((u): u is User => !!u),
@@ -29,8 +29,8 @@ const ChatManagementPanel: React.FC<ChatManagementPanelProps> = ({ chat, current
     };
   }, [chat]);
   
-  const sharedMedia = useMemo(() => chat.messages.filter(m => m.type === 'image'), [chat.messages]);
-  const sharedLinks = useMemo(() => chat.messages.filter(m => m.type === 'link'), [chat.messages]);
+  const sharedMedia = useMemo(() => (chat.messages || []).filter(m => m.type === 'image'), [chat.messages]);
+  const sharedLinks = useMemo(() => (chat.messages || []).filter(m => m.type === 'link'), [chat.messages]);
 
   const toggleMenu = (userId: string) => {
     setOpenMenuUserId(openMenuUserId === userId ? null : userId);
@@ -57,10 +57,15 @@ const ChatManagementPanel: React.FC<ChatManagementPanelProps> = ({ chat, current
       ) : (
         <div>
           <h4 className="text-sm font-bold text-gray-500 uppercase mb-2">Participants</h4>
-          {chat.participants.map(user => (
+          {(chat.participants || []).map(user => (
               <div key={user.id} className="flex items-center p-2">
-                <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full mr-3" />
-                <span className="font-semibold">{user.name}</span>
+                <UserAvatarWithInitials 
+                    fullName={user.name || user.full_name || 'User'}
+                    avatarUrl={user.avatar || user.avatar_url}
+                    size={40}
+                    className="rounded-full mr-3"
+                />
+                <span className="font-semibold">{user.name || user.full_name || 'User'}</span>
             </div>
           ))}
         </div>
@@ -93,7 +98,7 @@ const ChatManagementPanel: React.FC<ChatManagementPanelProps> = ({ chat, current
       <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-pink-200">
         <h3 className="text-lg font-bold text-gray-800">Chat Info</h3>
         <button onClick={onClose} className="text-gray-500 hover:text-pink-500">
-          <XIcon />
+                        <CloseIcon />
         </button>
       </div>
 
@@ -128,8 +133,13 @@ const MemberItem = ({ user, isAdmin, currentUserId, onAction, onMenuToggle, open
     return (
         <div className="flex items-center justify-between p-2 hover:bg-pink-100 rounded-md">
             <div className="flex items-center">
-                <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full mr-3" />
-                <span className="font-semibold">{user.name}</span>
+                <UserAvatarWithInitials 
+                    fullName={user.name || user.full_name || 'User'}
+                    avatarUrl={user.avatar || user.avatar_url}
+                    size={40}
+                    className="rounded-full mr-3"
+                />
+                <span className="font-semibold">{user.name || user.full_name || 'User'}</span>
             </div>
             {!isSelf && isAdmin && (
                 <div className="relative">

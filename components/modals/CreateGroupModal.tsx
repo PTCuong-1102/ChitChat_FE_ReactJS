@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User } from '../../types';
-import { XIcon, SearchIcon } from '../icons/Icons';
+import { CloseIcon, SearchIcon, UserAvatarWithInitials } from '../icons/Icons';
 
 interface CreateGroupModalProps {
   onClose: () => void;
@@ -22,14 +22,14 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ onClose, users }) =
   };
 
   const filteredUsers = users.filter(u => 
-    !u.isBot && u.id !== 'user-0' && u.name.toLowerCase().includes(searchTerm.toLowerCase())
+    !u.isBot && u.id !== 'user-0' && u.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-          <XIcon />
+                          <CloseIcon />
         </button>
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Create new group</h2>
         
@@ -66,8 +66,13 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ onClose, users }) =
                 selectedMembers.find(m => m.id === user.id) ? 'bg-pink-200' : 'hover:bg-pink-100'
               }`}
             >
-              <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full mr-3" />
-              <span>{user.name}</span>
+              <UserAvatarWithInitials 
+                fullName={user.name || user.full_name || 'User'}
+                avatarUrl={user.avatar || user.avatar_url}
+                size={32}
+                className="rounded-full mr-3"
+              />
+              <span>{user.name || user.full_name || 'User'}</span>
             </div>
           ))}
         </div>

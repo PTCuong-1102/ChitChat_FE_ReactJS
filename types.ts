@@ -27,6 +27,7 @@ export interface Message {
   text: string;
   timestamp: string;
   type: 'text' | 'image' | 'link';
+  editedAt?: string;
 }
 
 export interface Chat {

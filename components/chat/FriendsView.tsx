@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { useFriends } from '../../contexts/FriendsContext';
+import { ChatIcon, UserIcon, UserAvatarWithInitials } from '../icons/Icons';
 
 type FriendshipStatus = 'friends' | 'request_sent' | 'not_friends';
 
 interface FriendsViewProps {
   searchQuery: string;
   currentUser: User;
+  onStartChat: (friend: User) => void;
+  onViewProfile: (friend: User) => void;
 }
 
 const FriendsView: React.FC<FriendsViewProps> = ({ 
-    searchQuery, currentUser 
+    searchQuery, currentUser, onStartChat, onViewProfile 
 }) => {
   const [activeTab, setActiveTab] = useState('online');
   const [addFriendQuery, setAddFriendQuery] = useState('');
@@ -20,7 +23,7 @@ const FriendsView: React.FC<FriendsViewProps> = ({
 
   const filteredBySearch = friends.filter(user => 
     user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    user.user_name.toLowerCase().includes(searchQuery.toLowerCase())
+    user.user_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const onlineUsers = filteredBySearch.filter(u => u.status);
@@ -88,19 +91,26 @@ const FriendsView: React.FC<FriendsViewProps> = ({
             onAddFriend={handleAddFriend}
             currentUser={currentUser}
             isSearching={isSearching}
+            setAddFriendSearchResult={setAddFriendSearchResult}
         />
       ) : (
         <div>
             <h3 className="text-sm font-bold uppercase text-gray-500 mb-2">{activeTab} — {usersToDisplay.length}</h3>
             <div className="space-y-2">
-                {usersToDisplay.map(user => <UserRow key={user.id} user={user} />)}
+                {usersToDisplay.map(user => (
+                  <UserRow 
+                    key={user.id} 
+                    user={user} 
+                    onStartChat={onStartChat}
+                    onViewProfile={onViewProfile}
+                  />
+                ))}
             </div>
         </div>
       )}
     </div>
   );
 };
-
 interface AddFriendViewProps {
     query: string;
     setQuery: (query: string) => void;
@@ -109,9 +119,9 @@ interface AddFriendViewProps {
     onAddFriend: (email: string) => void;
     currentUser: User;
     isSearching: boolean;
+    setAddFriendSearchResult: (value: { user: User; status: string } | 'not_found' | null) => void;
 }
-
-const AddFriendView: React.FC<AddFriendViewProps> = ({ query, setQuery, searchResult, onSearch, onAddFriend, currentUser, isSearching }) => {
+const AddFriendView: React.FC<AddFriendViewProps> = ({ query, setQuery, searchResult, onSearch, onAddFriend, currentUser, isSearching, setAddFriendSearchResult }) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSearch(query);
@@ -164,10 +174,15 @@ const AddFriendView: React.FC<AddFriendViewProps> = ({ query, setQuery, searchRe
                         <div className="p-4 border border-pink-200 rounded-lg bg-pink-50">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
-                                    <img src={searchResult.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(searchResult.user.full_name || searchResult.user.user_name)}&background=pink&color=fff`} alt={searchResult.user.full_name} className="w-12 h-12 rounded-full" />
+                                    <UserAvatarWithInitials 
+                                        fullName={searchResult.user.full_name || searchResult.user.user_name || 'User'}
+                                        avatarUrl={searchResult.user.avatar_url}
+                                        size={48}
+                                        className="rounded-full"
+                                    />
                                     <div className="ml-4">
                                         <p className="font-bold text-lg">{searchResult.user.full_name || searchResult.user.user_name}</p>
-                                        <p className="text-sm text-gray-500">@{searchResult.user.user_name}</p>
+                                        <p className="text-sm text-gray-500">@{searchResult.user.user_name || 'unknown'}</p>
                                         <p className="text-sm text-gray-500">{searchResult.user.email}</p>
                                     </div>
                                 </div>
@@ -214,27 +229,30 @@ const TabButton: React.FC<{ isActive: boolean; onClick: () => void; children: Re
   </button>
 );
 
-const UserRow: React.FC<{ user: User }> = ({ user }) => {
-  const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || user.user_name)}&background=pink&color=fff`;
-  
+const UserRow: React.FC<{ user: User; onStartChat: (friend: User) => void; onViewProfile: (friend: User) => void }> = ({ user, onStartChat, onViewProfile }) => {
   return (
     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-pink-100">
       <div className="flex items-center">
         <div className="relative">
-          <img src={avatar} alt={user.full_name || user.user_name} className="w-10 h-10 rounded-full" />
+          <UserAvatarWithInitials 
+            fullName={user.full_name || user.user_name || 'User'}
+            avatarUrl={user.avatar_url}
+            size={40}
+            className="rounded-full"
+          />
           <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-white ${user.status ? 'bg-green-500' : 'bg-gray-400'}`}></span>
         </div>
         <div className="ml-4">
           <p className="font-bold">{user.full_name || user.user_name}</p>
-          <p className="text-sm text-gray-600">@{user.user_name}</p>
+          <p className="text-sm text-gray-600">@{user.user_name || 'unknown'}</p>
         </div>
       </div>
       <div className="flex space-x-2">
-          <button className="p-2 rounded-full bg-pink-200 text-gray-700 hover:bg-pink-300" title="Start Chat">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h1a2 2 0 002-2V9a2 2 0 00-2-2h-1z" /></svg>
+          <button onClick={() => onStartChat(user)} className="p-2 rounded-full bg-pink-200 text-gray-700 hover:bg-pink-300 transition-colors" title="Start Chat">
+              <ChatIcon className="h-5 w-5" />
           </button>
-           <button className="p-2 rounded-full bg-pink-200 text-gray-700 hover:bg-pink-300" title="View Profile">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+           <button onClick={() => onViewProfile(user)} className="p-2 rounded-full bg-pink-200 text-gray-700 hover:bg-pink-300 transition-colors" title="View Profile">
+              <UserIcon className="h-5 w-5" />
           </button>
       </div>
     </div>

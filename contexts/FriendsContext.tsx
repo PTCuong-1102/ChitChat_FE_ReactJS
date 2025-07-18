@@ -4,7 +4,7 @@ import { apiService } from '../services/apiService';
 import { useAuth } from './AuthContext';
 
 interface FriendRequest {
-  id: number;
+  id: string;
   senderId: string;
   receiverId: string;
   status: string;
@@ -20,8 +20,8 @@ interface FriendsContextType {
   loadFriends: () => Promise<void>;
   loadFriendRequests: () => Promise<void>;
   sendFriendRequest: (email: string) => Promise<void>;
-  acceptFriendRequest: (requestId: number) => Promise<void>;
-  rejectFriendRequest: (requestId: number) => Promise<void>;
+  acceptFriendRequest: (requestId: string) => Promise<void>;
+  rejectFriendRequest: (requestId: string) => Promise<void>;
   removeFriend: (friendId: string) => Promise<void>;
   searchUsers: (query: string) => Promise<{ user: User; status: string }[]>;
   findUser: (query: string) => Promise<{ user: User; status: string } | null>;
@@ -49,18 +49,45 @@ export const FriendsProvider: React.FC<FriendsProviderProps> = ({ children }) =>
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadFriends();
-      loadFriendRequests();
+      console.log('FriendsContext: User authenticated, loading friends data');
+      loadFriends().catch(error => {
+        console.error('Error loading friends on init:', error);
+      });
+      loadFriendRequests().catch(error => {
+        console.error('Error loading friend requests on init:', error);
+      });
     }
   }, [isAuthenticated]);
 
   const loadFriends = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Loading friends...');
       const friendsData = await apiService.getFriends();
+      console.log('📊 Raw friends data from API:', friendsData);
+      console.log('📊 Friends data type:', typeof friendsData);
+      console.log('📊 Friends data is array:', Array.isArray(friendsData));
+      
+      if (Array.isArray(friendsData)) {
+        console.log('📊 Friends count:', friendsData.length);
+        friendsData.forEach((friend, index) => {
+          console.log(`👤 Friend ${index + 1}:`, {
+            id: friend.id,
+            full_name: friend.full_name,
+            user_name: friend.user_name,
+            email: friend.email,
+            status: friend.status,
+            avatar_url: friend.avatar_url
+          });
+        });
+      }
+      
       setFriends(friendsData);
+      console.log('✅ Friends loaded successfully, count:', friendsData.length);
     } catch (error) {
-      console.error('Failed to load friends:', error);
+      console.error('❌ Failed to load friends:', error);
+      console.error('❌ Error details:', error.message);
+      setFriends([]); // Set empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +113,7 @@ export const FriendsProvider: React.FC<FriendsProviderProps> = ({ children }) =>
     }
   };
 
-  const acceptFriendRequest = async (requestId: number) => {
+  const acceptFriendRequest = async (requestId: string) => {
     try {
       await apiService.acceptFriendRequest(requestId);
       // Remove from friend requests and refresh friends list
@@ -98,7 +125,7 @@ export const FriendsProvider: React.FC<FriendsProviderProps> = ({ children }) =>
     }
   };
 
-  const rejectFriendRequest = async (requestId: number) => {
+  const rejectFriendRequest = async (requestId: string) => {
     try {
       await apiService.rejectFriendRequest(requestId);
       // Remove from friend requests
@@ -122,7 +149,9 @@ export const FriendsProvider: React.FC<FriendsProviderProps> = ({ children }) =>
 
   const searchUsers = async (query: string) => {
     try {
-      return await apiService.searchUsers(query);
+      const users: User[] = await apiService.searchUsers(query);
+      // Map users to the expected structure with a default status (e.g., "unknown")
+      return users.map(user => ({ user, status: "unknown" }));
     } catch (error) {
       console.error('Failed to search users:', error);
       throw error;

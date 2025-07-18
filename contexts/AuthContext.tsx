@@ -31,6 +31,21 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Helper function to map backend user data to frontend format
+const mapUserData = (backendUser: any): User => {
+  return {
+    ...backendUser,
+    // Map backend fields to frontend compatibility fields
+    name: backendUser.full_name || backendUser.name || 'User',
+    username: backendUser.user_name || backendUser.username || 'unknown',
+    avatar: backendUser.avatar_url || backendUser.avatar,
+    // Keep original backend fields as well
+    full_name: backendUser.full_name,
+    user_name: backendUser.user_name,
+    avatar_url: backendUser.avatar_url,
+  };
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +60,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (isAuth) {
           const userProfile = await apiService.getProfile();
           const userToken = localStorage.getItem('token');
-          setUser(userProfile);
+          console.log('👤 Raw user profile from backend:', userProfile);
+          const mappedUser = mapUserData(userProfile);
+          console.log('👤 Mapped user profile:', mappedUser);
+          setUser(mappedUser);
           setToken(userToken);
           setIsAuthenticated(true);
         }
@@ -68,8 +86,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('AuthContext: Starting login for:', email);
       setIsLoading(true);
       const response = await apiService.login({ email, password });
-      console.log('AuthContext: Login successful, user:', response.user);
-      setUser(response.user);
+      console.log('AuthContext: Login successful, raw user:', response.user);
+      const mappedUser = mapUserData(response.user);
+      console.log('AuthContext: Mapped user:', mappedUser);
+      setUser(mappedUser);
       setToken(response.token);
       setIsAuthenticated(true);
       console.log('AuthContext: User set in state');
@@ -98,8 +118,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         fullName: userData.fullName
       };
       const response = await apiService.register(backendUserData);
-      console.log('AuthContext: Registration successful, user:', response.user);
-      setUser(response.user);
+      console.log('AuthContext: Registration successful, raw user:', response.user);
+      const mappedUser = mapUserData(response.user);
+      console.log('AuthContext: Mapped user:', mappedUser);
+      setUser(mappedUser);
       setToken(response.token);
       setIsAuthenticated(true);
     } catch (error) {
